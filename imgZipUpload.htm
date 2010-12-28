@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>无标题页</title>
+	<script type="text/javascript" src="swfobject.js"></script>
+</head>
+<body onload="showFlash();">
+
+	<div id="divFlash">
+		加载中...
+	</div>
+	<script type="text/javascript">
+		function showFlash() {
+			var params = {
+				serverUrl: "saveImage.aspx",
+				jsFunction: "flashReturn",
+				imgWidth:500,
+				imgHeight:500,
+				imgQuality:80,
+				btnText:'图 片'
+			}
+			swfobject.embedSWF("imgZipUpload.swf", "divFlash", "100", "30", "10.0.0", "expressInstall.swf", params);
+		}
+
+		function flashReturn(type, str) {
+			if(type == 'error')
+			{
+				alert(str);
+			}
+			else if (type == 'complete')
+			{
+				var img1 = document.getElementById('img1');
+				img1.style.display = "block";
+				img1.src = str;
+			}
+		}
+	</script>
+	<img id="img1" style="display:none;" />
+</body>
+</html>

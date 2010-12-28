@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" minWidth="0" minHeight="0" backgroundColor="#FFFFFF" backgroundAlpha="0.0" backgroundGradientAlphas="[0.0, 0.0]" backgroundGradientColors="[#FFFFFF, #FFFFFF]" fontSize="12" applicationComplete="app(event)" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.events.FlexEvent;
+			import mx.graphics.codec.*;
+			
+			private var fileUpload:FileReference = new FileReference();
+			//private var serverUrl:String = 'http://localhost:8058/saveImage.aspx';
+			private var serverUrl:String = '';
+			private var imgWidth:Number = 100;
+			private var imgHeight:Number = 100;
+			private var imgQuality:Number = 80;
+			private var image:Image;
+			private var jsFunction:String = '';
+			protected function app(event:FlexEvent):void
+			{
+				if(parameters != null)
+				{
+					if(parameters["serverUrl"] != null)
+					{
+						serverUrl = String(parameters["serverUrl"]);
+					}
+					if(parameters["imgWidth"] != null)
+					{
+						imgWidth = Number(parameters["imgWidth"]);
+					}
+					if(parameters["imgHeight"] != null)
+					{
+						imgHeight = Number(parameters["imgHeight"]);
+					}
+					if(parameters["imgQuality"] != null)
+					{
+						imgQuality = Number(parameters["imgQuality"]);
+					}
+					if(parameters["jsFunction"] != null)
+					{
+						jsFunction = String(parameters["jsFunction"]);
+					}
+					if(parameters["btnText"] != null)
+					{
+						btnUpload.label = String(parameters["btnText"]);
+					}
+				}
+				
+				//服务器响应URL必须填写
+				if(serverUrl == '')
+				{
+					btnUpload.enabled = false;
+					return;
+				}
+				
+				imgWidth = Math.max(imgWidth, 10);
+				imgWidth = Math.min(imgWidth, 2000);
+				imgHeight = Math.max(imgHeight, 10);
+				imgHeight = Math.min(imgHeight, 2000);
+				imgQuality = Math.max(imgQuality, 1);
+				imgQuality = Math.min(imgQuality, 100);
+				
+				fileUpload.addEventListener(Event.SELECT, function(evt:Event):void{
+					btnUpload.enabled = false;
+					fileUpload.load();
+				});
+				
+				fileUpload.addEventListener(Event.COMPLETE, loadImageComplete);				
+				fileUpload.addEventListener(IOErrorEvent.IO_ERROR, function(evt:IOErrorEvent):void{
+					showError("加载图片失败！错误信息：" + evt.text);
+				});
+				
+				fileUpload.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(evt:SecurityErrorEvent):void{
+					showError("加载图片失败！错误信息：" + evt.text);
+				});
+				
+			}
+			
+			private function loadImageComplete(evt:Event):void
+			{
+				var imageloader:Loader = new Loader();
+				imageloader.contentLoaderInfo.addEventListener(Event.COMPLETE,function(e:Event):void{								
+					var bitmap:Bitmap = Bitmap(e.target.content);
+					
+					image = new Image();
+					image.addEventListener(FlexEvent.CREATION_COMPLETE, function(e:FlexEvent):void{
+						var bd : BitmapData = new BitmapData( image.width, image.height ); 
+						var m : Matrix = new Matrix(); 
+						bd.draw( image, m );
+						
+						var jpegEnc:JPEGEncoder = new JPEGEncoder(imgQuality);
+						var jpegData:ByteArray = jpegEnc.encode(bd);
+						
+						var req:URLRequest = new URLRequest(serverUrl);						
+						req.contentType = 'applicatoin/octet-stream';
+						req.method = URLRequestMethod.POST;
+						req.data = jpegData;
+						var arrHead:Array = new Array();
+						arrHead.push(new URLRequestHeader("fileName", encodeURIComponent(fileUpload.name)));
+						arrHead.push(new URLRequestHeader("width", image.width.toString()));
+						arrHead.push(new URLRequestHeader("height", image.height.toString()));
+						req.requestHeaders = arrHead;
+						
+						var loader:URLLoader = new URLLoader();
+						loader.addEventListener(Event.COMPLETE, uploadComplete);
+						loader.addEventListener(IOErrorEvent.IO_ERROR, function(evt:IOErrorEvent):void{
+							showError("上传图片失败！错误信息：" + evt.text);
+						});
+						loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(evt:SecurityErrorEvent):void{
+							showError("上传图片失败！错误信息：" + evt.text);
+						});
+						try
+						{
+							loader.load(req);
+						} 
+						catch (error:Error)
+						{
+							showError("上传失败！" + error.message);
+						}
+					});
+					image.source = bitmap;
+					image.x = 0;
+					image.y = 100;
+					if(bitmap.width > imgWidth || bitmap.height > imgHeight)
+					{
+						if(imgWidth / imgHeight > bitmap.width / bitmap.height)
+						{
+							image.height = imgHeight;
+							image.width = imgHeight / bitmap.height * bitmap.width;
+						}
+						else
+						{
+							image.width = imgWidth;
+							image.height = imgWidth / bitmap.width * bitmap.height;
+						}
+					}
+					addChild(image);
+				});
+				imageloader.loadBytes(fileUpload.data);
+			}
+			
+			private function showError(str:String):void
+			{
+				btnUpload.enabled = true;
+				callJs('error', str);
+			}
+			
+			private function uploadComplete(evt:Event):void{							
+				btnUpload.enabled = true;
+				callJs('complete', evt.target.data);
+			}
+			
+			protected function btnUpload_clickHandler(event:MouseEvent):void
+			{
+				if(image != null)
+				{
+					image.source = null;
+					image = null;
+				}
+				var jpgFilter:FileFilter = new FileFilter("*.jpg","*.jpg");
+				var bmpFilter:FileFilter = new FileFilter("*.bmp","*.bmp");
+				fileUpload.browse([jpgFilter, bmpFilter]);
+			}
+			
+			//回调JS函数
+			private function callJs(type:String, str:String):void
+			{
+				if(jsFunction == '')
+				{
+					return;
+				}
+				try
+				{
+					if(ExternalInterface.available)
+					{
+						ExternalInterface.call(jsFunction, type, str);
+					}
+				}
+				catch(err:Error)
+				{}
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Button x="5" y="5" label="上 传" fontWeight="normal" id="btnUpload" click="btnUpload_clickHandler(event)"/>
+	
+</mx:Application>
