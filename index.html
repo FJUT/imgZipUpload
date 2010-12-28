@@ -46,8 +46,8 @@
         <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
     </div>
 
-    <h1><a href="http://github.com/kainy/imgZipUpload">imgZipUpload</a>
-      <span class="small">by <a href="http://github.com/kainy">kainy</a></span></h1>
+    <h1><a href="http://github.com/kainy/imgZipUpload">图片压缩上传</a>
+      <span class="small">by <a href="http://github.com/kainy">Kainy</a></span></h1>
 
     <div class="description">
       如果用户使用数码相机照的照片一般都会在很大！（2M~5M） 一般网站都会在用户上传照片后对照片进行适当压缩，以提高网页浏览时照片的加载速度。
@@ -65,46 +65,93 @@
 使用post方式将Jpg数据发送到服务器端！</p><h2>Install</h2>
 <p>调用方法 
 
-<!DOCTYPE html》
-<html》
-<head>
-    <title>图片压缩上传</title>
-	<script type="text/javascript" src="swfobject.js"></script>
-</head>
-<body onload="showFlash();">
 
-	<div id="divFlash">
+<div class="cnblogs_Highlighter">
+
+<pre class="brush:html">&lt;!DOCTYPE html&gt;
+
+&lt;html&gt;
+
+&lt;head&gt;
+
+    &lt;title&gt;图片压缩上传&lt;/title&gt;
+
+	&lt;script type="text/javascript" src="swfobject.js"&gt;&lt;/script&gt;
+
+&lt;/head&gt;
+
+&lt;body onload="showFlash();"&gt;
+
+
+
+	&lt;div id="divFlash"&gt;
+
 		加载中...
-	</div>
-	<script type="text/javascript">
+
+	&lt;/div&gt;
+
+	&lt;script type="text/javascript"&gt;
+
 		function showFlash() {
+
 			var params = {
+
 				serverUrl: "saveImage.aspx",
+
 				jsFunction: "flashReturn",
+
 				imgWidth:500,
+
 				imgHeight:500,
+
 				imgQuality:80,
+
 				btnText:'图 片'
+
 			}
+
 			swfobject.embedSWF("imgZipUpload.swf", "divFlash", "100", "30", "10.0.0", "expressInstall.swf", params);
+
 		}
+
+
 
 		function flashReturn(type, str) {
+
 			if(type == 'error')
+
 			{
+
 				alert(str);
+
 			}
+
 			else if (type == 'complete')
+
 			{
+
 				var img1 = document.getElementById('img1');
+
 				img1.style.display = "block";
+
 				img1.src = str;
+
 			}
+
 		}
-	</script>
-	<img id="img1" style="display:none;" />
-</body>
-</html》
+
+	&lt;/script&gt;
+
+	&lt;img id="img1" style="display:none;" /&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;
+
+</pre>
+
+</div>
+
 </p>
 <h2>Authors</h2>
 <p>Kainy (GT@Kainy.CN)
